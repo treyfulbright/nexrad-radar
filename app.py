@@ -78,17 +78,17 @@ MAX_ALLOWED_RANGE_KM = 460.0
 # ============================================================
 
 # Keep all 10 animation volumes decoded if RAM permits.
-MAX_DECODED_VOLUMES = 10
+MAX_DECODED_VOLUMES = 2
 
 # Keep more rendered combinations available.
-MAX_RENDERED_FRAMES = 120
+MAX_RENDERED_FRAMES = 24
 
 # Cache geometry separately from radar values.
-MAX_GEOMETRY_CACHE = 30
+MAX_GEOMETRY_CACHE = 6
 
 # Display raster width.
 # Native Level-II data is NOT reduced for interrogation.
-DISPLAY_WIDTH_PX = 800
+DISPLAY_WIDTH_PX = 600
 
 DISPLAY_MIN_HEIGHT_PX = 500
 DISPLAY_MAX_HEIGHT_PX = 1000
@@ -99,8 +99,8 @@ DISPLAY_MAX_HEIGHT_PX = 1000
 # 2 = approximately 1/4 the cells
 #
 # Interrogation remains native resolution.
-DISPLAY_RAY_STEP = 2
-DISPLAY_GATE_STEP = 2
+DISPLAY_RAY_STEP = 3
+DISPLAY_GATE_STEP = 3
 
 # KDP calculation parameters.
 KDP_WINDOW_KM = 5.0
@@ -195,22 +195,25 @@ PRODUCTS = {
         "vmax":
             80,
 
+        # Default reflectivity palette: blue/cyan low echoes,
+        # green moderate echoes, yellow/orange strong echoes,
+        # red severe cores, then magenta/purple for the highest values.
         "colors": [
-            "#646464",
-            "#04e9e7",
-            "#019ff4",
-            "#0300f4",
-            "#02fd02",
-            "#01c501",
-            "#008e00",
-            "#fdf802",
-            "#e5bc00",
-            "#fd9500",
-            "#fd0000",
-            "#d40000",
-            "#bc0000",
-            "#f800fd",
-            "#9854c6"
+            "#001a66",
+            "#003cff",
+            "#00b7ff",
+            "#00e676",
+            "#00b83e",
+            "#008f2d",
+            "#f7f700",
+            "#ffd000",
+            "#ff9a00",
+            "#ff4d00",
+            "#ff0000",
+            "#c80000",
+            "#8f0000",
+            "#ff00ff",
+            "#a64dff"
         ]
     },
 
