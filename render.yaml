@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: nexrad-radar
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 180 --graceful-timeout 30 --keep-alive 5
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: MPLBACKEND
+        value: Agg
+      - key: RADAR_CACHE_DIR
+        value: /tmp/nexrad-radar-cache
