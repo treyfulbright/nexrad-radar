@@ -1,1 +1,3335 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>NEXRAD Level-II Radar</title>
+
+<link
+    href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css"
+    rel="stylesheet"
+>
+
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"></script>
+
+<style>
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #111;
+}
+
+#map {
+    position: absolute;
+    inset: 0;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+#header {
+    position: absolute;
+    z-index: 20;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+
+    background: rgba(12, 17, 22, 0.96);
+
+    color: white;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 14px;
+
+    border-bottom: 1px solid #555;
+
+    box-sizing: border-box;
+}
+
+#title {
+    font-weight: bold;
+    font-size: 17px;
+}
+
+#time {
+    margin-left: auto;
+    color: #ccc;
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   CONTROL PANEL
+   ========================================================= */
+
+#controls {
+    position: absolute;
+    z-index: 20;
+
+    left: 12px;
+    top: 62px;
+
+    width: 305px;
+
+    padding: 12px;
+
+    background: rgba(15, 20, 26, 0.95);
+
+    border: 1px solid #56616c;
+    border-radius: 6px;
+
+    color: white;
+
+    box-sizing: border-box;
+}
+
+.label {
+    margin-top: 10px;
+    margin-bottom: 5px;
+
+    font-size: 11px;
+    font-weight: bold;
+
+    color: #aeb8c2;
+
+    text-transform: uppercase;
+}
+
+.label:first-child {
+    margin-top: 0;
+}
+
+select {
+    width: 100%;
+
+    padding: 7px;
+
+    background: #252d35;
+
+    color: white;
+
+    border: 1px solid #56616c;
+    border-radius: 4px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PRODUCT BUTTONS
+   ========================================================= */
+
+#products {
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 5px;
+}
+
+.product {
+    padding: 8px 4px;
+
+    border: 1px solid #596570;
+    border-radius: 4px;
+
+    background: #252d35;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.product:hover {
+    background: #34404b;
+}
+
+.product.active {
+    background: #1686d9;
+    border-color: #59bfff;
+}
+
+
+/* =========================================================
+   NORMAL BUTTONS
+   ========================================================= */
+
+.controlButton {
+    padding: 8px;
+
+    border: 1px solid #596570;
+    border-radius: 4px;
+
+    background: #252d35;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.controlButton:hover {
+    background: #34404b;
+}
+
+.controlButton.active {
+    background: #1686d9;
+    border-color: #59bfff;
+}
+
+
+/* =========================================================
+   SLIDERS
+   ========================================================= */
+
+#opacity,
+#frameSlider {
+    width: 100%;
+}
+
+
+/* =========================================================
+   ANIMATION BUTTONS
+   ========================================================= */
+
+#animationButtons {
+    display: flex;
+    gap: 5px;
+}
+
+#animationButtons button {
+    flex: 1;
+}
+
+
+/* =========================================================
+   FRAME TIME
+   ========================================================= */
+
+#frameTime {
+    text-align: center;
+
+    margin-top: 4px;
+
+    font-size: 11px;
+
+    color: #ccc;
+}
+
+
+/* =========================================================
+   CHECKBOXES
+   ========================================================= */
+
+.checkboxRow {
+    margin-top: 8px;
+
+    font-size: 12px;
+
+    color: #ddd;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+#status {
+    margin-top: 10px;
+
+    padding: 7px;
+
+    min-height: 28px;
+
+    background: #090c10;
+
+    border-radius: 4px;
+
+    color: #ddd;
+
+    font-size: 12px;
+
+    line-height: 16px;
+}
+
+
+/* =========================================================
+   LOADING
+   ========================================================= */
+
+#loading {
+    display: none;
+
+    position: absolute;
+
+    z-index: 50;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    padding: 16px 24px;
+
+    background: rgba(0, 0, 0, 0.88);
+
+    border: 1px solid #777;
+    border-radius: 6px;
+
+    color: white;
+
+    font-weight: bold;
+
+    pointer-events: none;
+}
+
+
+/* =========================================================
+   LEGEND
+   ========================================================= */
+
+#legend {
+    position: absolute;
+
+    z-index: 20;
+
+    right: 12px;
+    bottom: 25px;
+
+    width: 330px;
+
+    padding: 9px;
+
+    background: rgba(15, 20, 26, 0.94);
+
+    border: 1px solid #56616c;
+    border-radius: 5px;
+
+    color: white;
+
+    box-sizing: border-box;
+}
+
+#legendTitle {
+    font-size: 12px;
+    font-weight: bold;
+
+    margin-bottom: 6px;
+}
+
+#colorbar {
+    height: 18px;
+
+    border: 1px solid #777;
+}
+
+#legendLabels {
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    font-size: 10px;
+
+    margin-top: 3px;
+}
+
+
+/* =========================================================
+   MAPBOX POPUP
+   ========================================================= */
+
+.mapboxgl-popup-content {
+    background: #171d23;
+
+    color: white;
+
+    border: 1px solid #666;
+
+    font-size: 12px;
+
+    line-height: 18px;
+}
+
+.mapboxgl-popup-tip {
+    border-top-color: #171d23 !important;
+}
+
+.mapboxgl-popup-close-button {
+    color: white;
+}
+
+
+#siteSearch { width:100%; box-sizing:border-box; margin-bottom:6px; background:#111820; color:white; border:1px solid #59636d; border-radius:4px; padding:7px 8px; }
+#site { width:100%; background:#111820; color:white; }
+#nextUpdate { margin-top:6px; font-size:11px; color:#9fd3ff; }
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media
+(max-width: 700px) {
+
+    #controls {
+        width: 270px;
+    }
+
+    #legend {
+        width: 260px;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =======================================================
+     MAP
+     ======================================================= -->
+
+<div id="map"></div>
+
+
+<!-- =======================================================
+     HEADER
+     ======================================================= -->
+
+<div id="header">
+
+    <div id="title">
+        NEXRAD Level-II Radar
+    </div>
+
+    <div id="time">
+        Waiting for radar...
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     CONTROLS
+     ======================================================= -->
+
+<div id="controls">
+
+
+    <div class="label">
+        Radar
+    </div>
+
+
+    <input id="siteSearch" type="search" placeholder="Search radar, city, or state..." autocomplete="off">
+
+    <select id="site" size="7">
+<optgroup label="AL">
+<option value="KBMX" data-search="KBMX Birmingham AL">KBMX — Birmingham, AL</option>
+<option value="KEOX" data-search="KEOX Ft Rucker / Novosel AL">KEOX — Ft Rucker / Novosel, AL</option>
+<option value="KHTX" data-search="KHTX Huntsville / Hytop AL">KHTX — Huntsville / Hytop, AL</option>
+<option value="KMXX" data-search="KMXX Maxwell AFB AL">KMXX — Maxwell AFB, AL</option>
+<option value="KMOB" data-search="KMOB Mobile AL">KMOB — Mobile, AL</option>
+</optgroup>
+<optgroup label="AR">
+<option value="KSRX" data-search="KSRX Fort Smith AR">KSRX — Fort Smith, AR</option>
+<option value="KLZK" data-search="KLZK Little Rock AR">KLZK — Little Rock, AR</option>
+</optgroup>
+<optgroup label="AZ">
+<option value="KFSX" data-search="KFSX Flagstaff AZ">KFSX — Flagstaff, AZ</option>
+<option value="KIWA" data-search="KIWA Phoenix AZ">KIWA — Phoenix, AZ</option>
+<option value="KEMX" data-search="KEMX Tucson AZ">KEMX — Tucson, AZ</option>
+<option value="KYUX" data-search="KYUX Yuma / Phoenix AZ">KYUX — Yuma / Phoenix, AZ</option>
+</optgroup>
+<optgroup label="CA">
+<option value="KBBX" data-search="KBBX Beale AFB CA">KBBX — Beale AFB, CA</option>
+<option value="KEYX" data-search="KEYX Edwards AFB CA">KEYX — Edwards AFB, CA</option>
+<option value="KBHX" data-search="KBHX Eureka CA">KBHX — Eureka, CA</option>
+<option value="KVTX" data-search="KVTX Los Angeles CA">KVTX — Los Angeles, CA</option>
+<option value="KDAX" data-search="KDAX Sacramento CA">KDAX — Sacramento, CA</option>
+<option value="KNKX" data-search="KNKX San Diego CA">KNKX — San Diego, CA</option>
+<option value="KMUX" data-search="KMUX San Francisco CA">KMUX — San Francisco, CA</option>
+<option value="KHNX" data-search="KHNX San Joaquin CA">KHNX — San Joaquin, CA</option>
+<option value="KSOX" data-search="KSOX Santa Ana Mountains CA">KSOX — Santa Ana Mountains, CA</option>
+<option value="KVBX" data-search="KVBX Vandenberg SFB CA">KVBX — Vandenberg SFB, CA</option>
+</optgroup>
+<optgroup label="CO">
+<option value="KFTG" data-search="KFTG Denver CO">KFTG — Denver, CO</option>
+<option value="KGJX" data-search="KGJX Grand Junction CO">KGJX — Grand Junction, CO</option>
+<option value="KPUX" data-search="KPUX Pueblo CO">KPUX — Pueblo, CO</option>
+</optgroup>
+<optgroup label="DE">
+<option value="KDOX" data-search="KDOX Dover AFB DE">KDOX — Dover AFB, DE</option>
+</optgroup>
+<optgroup label="FL">
+<option value="KEVX" data-search="KEVX Eglin AFB FL">KEVX — Eglin AFB, FL</option>
+<option value="KJAX" data-search="KJAX Jacksonville FL">KJAX — Jacksonville, FL</option>
+<option value="KBYX" data-search="KBYX Key West FL">KBYX — Key West, FL</option>
+<option value="KMLB" data-search="KMLB Melbourne FL">KMLB — Melbourne, FL</option>
+<option value="KAMX" data-search="KAMX Miami FL">KAMX — Miami, FL</option>
+<option value="KTLH" data-search="KTLH Tallahassee FL">KTLH — Tallahassee, FL</option>
+<option value="KTBW" data-search="KTBW Tampa Bay FL">KTBW — Tampa Bay, FL</option>
+</optgroup>
+<optgroup label="GA">
+<option value="KFFC" data-search="KFFC Atlanta GA">KFFC — Atlanta, GA</option>
+<option value="KVAX" data-search="KVAX Moody AFB GA">KVAX — Moody AFB, GA</option>
+<option value="KJGX" data-search="KJGX Robins AFB GA">KJGX — Robins AFB, GA</option>
+</optgroup>
+<optgroup label="IA">
+<option value="KDVN" data-search="KDVN Davenport IA">KDVN — Davenport, IA</option>
+<option value="KDMX" data-search="KDMX Des Moines IA" selected>KDMX — Des Moines, IA</option>
+</optgroup>
+<optgroup label="ID">
+<option value="KCBX" data-search="KCBX Boise ID">KCBX — Boise, ID</option>
+<option value="KSFX" data-search="KSFX Pocatello ID">KSFX — Pocatello, ID</option>
+</optgroup>
+<optgroup label="IL">
+<option value="KLOT" data-search="KLOT Chicago IL">KLOT — Chicago, IL</option>
+<option value="KILX" data-search="KILX Lincoln IL">KILX — Lincoln, IL</option>
+</optgroup>
+<optgroup label="IN">
+<option value="KVWX" data-search="KVWX Evansville IN">KVWX — Evansville, IN</option>
+<option value="KIND" data-search="KIND Indianapolis IN">KIND — Indianapolis, IN</option>
+<option value="KIWX" data-search="KIWX North Webster IN">KIWX — North Webster, IN</option>
+</optgroup>
+<optgroup label="KS">
+<option value="KDDC" data-search="KDDC Dodge City KS">KDDC — Dodge City, KS</option>
+<option value="KGLD" data-search="KGLD Goodland KS">KGLD — Goodland, KS</option>
+<option value="KTWX" data-search="KTWX Topeka KS">KTWX — Topeka, KS</option>
+<option value="KICT" data-search="KICT Wichita KS">KICT — Wichita, KS</option>
+</optgroup>
+<optgroup label="KY">
+<option value="KHPX" data-search="KHPX Ft Campbell KY">KHPX — Ft Campbell, KY</option>
+<option value="KJKL" data-search="KJKL Jackson KY">KJKL — Jackson, KY</option>
+<option value="KLVX" data-search="KLVX Louisville KY">KLVX — Louisville, KY</option>
+<option value="KPAH" data-search="KPAH Paducah KY">KPAH — Paducah, KY</option>
+</optgroup>
+<optgroup label="LA">
+<option value="KPOE" data-search="KPOE Ft Polk / Johnson LA">KPOE — Ft Polk / Johnson, LA</option>
+<option value="KLCH" data-search="KLCH Lake Charles LA">KLCH — Lake Charles, LA</option>
+<option value="KHDC" data-search="KHDC New Orleans / Hammond LA">KHDC — New Orleans / Hammond, LA</option>
+<option value="KSHV" data-search="KSHV Shreveport LA">KSHV — Shreveport, LA</option>
+</optgroup>
+<optgroup label="MA">
+<option value="KBOX" data-search="KBOX Boston MA">KBOX — Boston, MA</option>
+</optgroup>
+<optgroup label="ME">
+<option value="KCBW" data-search="KCBW Caribou ME">KCBW — Caribou, ME</option>
+<option value="KGYX" data-search="KGYX Portland ME">KGYX — Portland, ME</option>
+</optgroup>
+<optgroup label="MI">
+<option value="KDTX" data-search="KDTX Detroit MI">KDTX — Detroit, MI</option>
+<option value="KAPX" data-search="KAPX Gaylord / Alpena MI">KAPX — Gaylord / Alpena, MI</option>
+<option value="KGRR" data-search="KGRR Grand Rapids MI">KGRR — Grand Rapids, MI</option>
+<option value="KMQT" data-search="KMQT Marquette MI">KMQT — Marquette, MI</option>
+</optgroup>
+<optgroup label="MN">
+<option value="KDLH" data-search="KDLH Duluth MN">KDLH — Duluth, MN</option>
+<option value="KMPX" data-search="KMPX Minneapolis MN">KMPX — Minneapolis, MN</option>
+</optgroup>
+<optgroup label="MO">
+<option value="KEAX" data-search="KEAX Kansas City MO">KEAX — Kansas City, MO</option>
+<option value="KSGF" data-search="KSGF Springfield MO">KSGF — Springfield, MO</option>
+<option value="KLSX" data-search="KLSX St Louis MO">KLSX — St Louis, MO</option>
+</optgroup>
+<optgroup label="MS">
+<option value="KGWX" data-search="KGWX Columbus AFB MS">KGWX — Columbus AFB, MS</option>
+<option value="KDGX" data-search="KDGX Jackson MS">KDGX — Jackson, MS</option>
+</optgroup>
+<optgroup label="MT">
+<option value="KBLX" data-search="KBLX Billings MT">KBLX — Billings, MT</option>
+<option value="KGGW" data-search="KGGW Glasgow MT">KGGW — Glasgow, MT</option>
+<option value="KTFX" data-search="KTFX Great Falls MT">KTFX — Great Falls, MT</option>
+<option value="KMSX" data-search="KMSX Missoula MT">KMSX — Missoula, MT</option>
+</optgroup>
+<optgroup label="NC">
+<option value="KMHX" data-search="KMHX Morehead City NC">KMHX — Morehead City, NC</option>
+<option value="KRAX" data-search="KRAX Raleigh / Durham NC">KRAX — Raleigh / Durham, NC</option>
+<option value="KLTX" data-search="KLTX Wilmington NC">KLTX — Wilmington, NC</option>
+</optgroup>
+<optgroup label="ND">
+<option value="KBIS" data-search="KBIS Bismarck ND">KBIS — Bismarck, ND</option>
+<option value="KMVX" data-search="KMVX Grand Forks ND">KMVX — Grand Forks, ND</option>
+<option value="KMBX" data-search="KMBX Minot AFB ND">KMBX — Minot AFB, ND</option>
+</optgroup>
+<optgroup label="NE">
+<option value="KUEX" data-search="KUEX Hastings NE">KUEX — Hastings, NE</option>
+<option value="KLNX" data-search="KLNX North Platte NE">KLNX — North Platte, NE</option>
+<option value="KOAX" data-search="KOAX Omaha NE">KOAX — Omaha, NE</option>
+</optgroup>
+<optgroup label="NJ">
+<option value="KDIX" data-search="KDIX Philadelphia / Mt Holly NJ">KDIX — Philadelphia / Mt Holly, NJ</option>
+</optgroup>
+<optgroup label="NM">
+<option value="KABX" data-search="KABX Albuquerque NM">KABX — Albuquerque, NM</option>
+<option value="KFDX" data-search="KFDX Cannon AFB NM">KFDX — Cannon AFB, NM</option>
+<option value="KHDX" data-search="KHDX Holloman AFB NM">KHDX — Holloman AFB, NM</option>
+</optgroup>
+<optgroup label="NV">
+<option value="KLRX" data-search="KLRX Elko NV">KLRX — Elko, NV</option>
+<option value="KESX" data-search="KESX Las Vegas NV">KESX — Las Vegas, NV</option>
+<option value="KRGX" data-search="KRGX Reno NV">KRGX — Reno, NV</option>
+</optgroup>
+<optgroup label="NY">
+<option value="KENX" data-search="KENX Albany NY">KENX — Albany, NY</option>
+<option value="KBGM" data-search="KBGM Binghamton NY">KBGM — Binghamton, NY</option>
+<option value="KBUF" data-search="KBUF Buffalo NY">KBUF — Buffalo, NY</option>
+<option value="KTYX" data-search="KTYX Ft Drum NY">KTYX — Ft Drum, NY</option>
+<option value="KOKX" data-search="KOKX New York NY">KOKX — New York, NY</option>
+</optgroup>
+<optgroup label="OH">
+<option value="KILN" data-search="KILN Cincinnati OH">KILN — Cincinnati, OH</option>
+<option value="KCLE" data-search="KCLE Cleveland OH">KCLE — Cleveland, OH</option>
+</optgroup>
+<optgroup label="OK">
+<option value="KFDR" data-search="KFDR Altus AFB OK">KFDR — Altus AFB, OK</option>
+<option value="KTLX" data-search="KTLX Oklahoma City OK">KTLX — Oklahoma City, OK</option>
+<option value="KINX" data-search="KINX Tulsa OK">KINX — Tulsa, OK</option>
+<option value="KVNX" data-search="KVNX Vance AFB OK">KVNX — Vance AFB, OK</option>
+</optgroup>
+<optgroup label="OR">
+<option value="KMAX" data-search="KMAX Medford OR">KMAX — Medford, OR</option>
+<option value="KPDT" data-search="KPDT Pendleton OR">KPDT — Pendleton, OR</option>
+<option value="KRTX" data-search="KRTX Portland OR">KRTX — Portland, OR</option>
+</optgroup>
+<optgroup label="PA">
+<option value="KPBZ" data-search="KPBZ Pittsburgh PA">KPBZ — Pittsburgh, PA</option>
+<option value="KCCX" data-search="KCCX State College PA">KCCX — State College, PA</option>
+</optgroup>
+<optgroup label="SC">
+<option value="KCLX" data-search="KCLX Charleston SC">KCLX — Charleston, SC</option>
+<option value="KCAE" data-search="KCAE Columbia SC">KCAE — Columbia, SC</option>
+<option value="KGSP" data-search="KGSP Greer SC">KGSP — Greer, SC</option>
+</optgroup>
+<optgroup label="SD">
+<option value="KABR" data-search="KABR Aberdeen SD">KABR — Aberdeen, SD</option>
+<option value="KUDX" data-search="KUDX Rapid City SD">KUDX — Rapid City, SD</option>
+<option value="KFSD" data-search="KFSD Sioux Falls SD">KFSD — Sioux Falls, SD</option>
+</optgroup>
+<optgroup label="TN">
+<option value="KNQA" data-search="KNQA Memphis TN">KNQA — Memphis, TN</option>
+<option value="KMRX" data-search="KMRX Morristown TN">KMRX — Morristown, TN</option>
+<option value="KOHX" data-search="KOHX Nashville TN">KOHX — Nashville, TN</option>
+</optgroup>
+<optgroup label="TX">
+<option value="KAMA" data-search="KAMA Amarillo TX">KAMA — Amarillo, TX</option>
+<option value="KEWX" data-search="KEWX Austin / San Antonio TX">KEWX — Austin / San Antonio, TX</option>
+<option value="KBRO" data-search="KBRO Brownsville TX">KBRO — Brownsville, TX</option>
+<option value="KCRP" data-search="KCRP Corpus Christi TX">KCRP — Corpus Christi, TX</option>
+<option value="KDYX" data-search="KDYX Dyess AFB TX">KDYX — Dyess AFB, TX</option>
+<option value="KEPZ" data-search="KEPZ El Paso TX">KEPZ — El Paso, TX</option>
+<option value="KGRK" data-search="KGRK Ft Hood / Cavazos TX">KGRK — Ft Hood / Cavazos, TX</option>
+<option value="KFWS" data-search="KFWS Ft Worth TX">KFWS — Ft Worth, TX</option>
+<option value="KHGX" data-search="KHGX Houston TX">KHGX — Houston, TX</option>
+<option value="KDFX" data-search="KDFX Laughlin AFB TX">KDFX — Laughlin AFB, TX</option>
+<option value="KLBB" data-search="KLBB Lubbock TX">KLBB — Lubbock, TX</option>
+<option value="KMAF" data-search="KMAF Midland / Odessa TX">KMAF — Midland / Odessa, TX</option>
+<option value="KSJT" data-search="KSJT San Angelo TX">KSJT — San Angelo, TX</option>
+</optgroup>
+<optgroup label="UT">
+<option value="KICX" data-search="KICX Cedar City UT">KICX — Cedar City, UT</option>
+<option value="KMTX" data-search="KMTX Salt Lake City UT">KMTX — Salt Lake City, UT</option>
+</optgroup>
+<optgroup label="VA">
+<option value="KFCX" data-search="KFCX Blacksburg VA">KFCX — Blacksburg, VA</option>
+<option value="KLWX" data-search="KLWX Sterling / Washington DC VA">KLWX — Sterling / Washington DC, VA</option>
+<option value="KAKQ" data-search="KAKQ Wakefield VA">KAKQ — Wakefield, VA</option>
+</optgroup>
+<optgroup label="VT">
+<option value="KCXX" data-search="KCXX Burlington VT">KCXX — Burlington, VT</option>
+</optgroup>
+<optgroup label="WA">
+<option value="KLGX" data-search="KLGX Langley Hill WA">KLGX — Langley Hill, WA</option>
+<option value="KATX" data-search="KATX Seattle WA">KATX — Seattle, WA</option>
+<option value="KOTX" data-search="KOTX Spokane WA">KOTX — Spokane, WA</option>
+</optgroup>
+<optgroup label="WI">
+<option value="KGRB" data-search="KGRB Green Bay WI">KGRB — Green Bay, WI</option>
+<option value="KARX" data-search="KARX La Crosse WI">KARX — La Crosse, WI</option>
+<option value="KMKX" data-search="KMKX Milwaukee WI">KMKX — Milwaukee, WI</option>
+</optgroup>
+<optgroup label="WV">
+<option value="KRLX" data-search="KRLX Charleston WV">KRLX — Charleston, WV</option>
+</optgroup>
+<optgroup label="WY">
+<option value="KCYS" data-search="KCYS Cheyenne WY">KCYS — Cheyenne, WY</option>
+<option value="KRIW" data-search="KRIW Riverton WY">KRIW — Riverton, WY</option>
+</optgroup>
+    </select>
+
+
+    <div class="label">
+        Product
+    </div>
+
+
+    <div id="products">
+
+        <button
+            class="product active"
+            data-product="REF"
+        >
+            REF
+        </button>
+
+        <button
+            class="product"
+            data-product="VEL"
+        >
+            VEL
+        </button>
+
+        <button
+            class="product"
+            data-product="SW"
+        >
+            SW
+        </button>
+
+        <button
+            class="product"
+            data-product="ZDR"
+        >
+            ZDR
+        </button>
+
+        <button
+            class="product"
+            data-product="CC"
+        >
+            CC
+        </button>
+
+        <button
+            class="product"
+            data-product="KDP"
+        >
+            KDP
+        </button>
+
+    </div>
+
+
+    <div class="label">
+        Elevation
+    </div>
+
+    <select id="elevation">
+    </select>
+
+
+    <div class="label">
+        Radar Opacity
+    </div>
+
+    <input
+        id="opacity"
+        type="range"
+        min="0"
+        max="1"
+        step="0.05"
+        value="0.82"
+    >
+
+
+    <div class="label">
+        Animation
+    </div>
+
+    <div id="animationButtons">
+
+        <button
+            id="loopButton"
+            class="controlButton"
+        >
+            ▶ Loop
+        </button>
+
+        <button
+            id="latestButton"
+            class="controlButton"
+        >
+            Latest
+        </button>
+
+    </div>
+
+
+    <input
+        id="frameSlider"
+        type="range"
+        min="0"
+        max="9"
+        step="1"
+        value="9"
+    >
+
+
+    <div id="frameTime">
+        Latest
+    </div>
+
+    <div id="nextUpdate">Next radar check in 60s</div>
+
+
+    <div class="checkboxRow">
+
+        <label>
+
+            <input
+                id="interrogate"
+                type="checkbox"
+                checked
+            >
+
+            Data interrogation
+
+        </label>
+
+    </div>
+
+
+    <div class="checkboxRow">
+
+        <label>
+
+            <input
+                id="rangeRings"
+                type="checkbox"
+                checked
+            >
+
+            Range rings
+
+        </label>
+
+    </div>
+
+
+    <div id="status">
+        Starting radar...
+    </div>
+
+
+</div>
+
+
+<div id="legend">
+
+    <div id="legendTitle">
+        Base Reflectivity — dBZ
+    </div>
+
+    <div id="colorbar">
+    </div>
+
+    <div id="legendLabels">
+
+        <span id="minLabel"></span>
+        <span id="midLabel"></span>
+        <span id="maxLabel"></span>
+
+    </div>
+
+</div>
+
+
+<div id="loading">
+    Loading NEXRAD Level-II...
+</div>
+
+
+<script>
+
+/* DEPLOYMENT NOTE: API URLs are intentionally same-origin (/api/...).
+   When Flask is deployed over HTTPS, the browser automatically uses that HTTPS origin. */
+
+
+/* =========================================================
+   MAPBOX TOKEN
+   ========================================================= */
+
+mapboxgl.accessToken =
+    "pk.eyJ1IjoidHJleWZ1bGJyaWdodCIsImEiOiJjbWVkaW54OWkwOXlsMm5xN2IxOGQ3bTJyIn0.NK0hXvnD9GOXdR359UTGCA";
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+let currentSite =
+    "KDMX";
+
+let currentProduct =
+    "REF";
+
+let currentElevation =
+    0.5;
+
+let radarLat =
+    41.731;
+
+let radarLon =
+    -93.723;
+
+let animationFrames =
+    [];
+
+let currentFrameIndex =
+    0;
+
+let animationTimer =
+    null;
+
+let animationRunning =
+    false;
+
+let animationBusy =
+    false;
+
+
+/* =========================================================
+   60-SECOND LIVE AUTO UPDATE
+   ========================================================= */
+
+const LIVE_UPDATE_INTERVAL =
+    60000;
+
+let liveUpdateTimer =
+    null;
+
+let liveUpdateBusy =
+    false;
+
+let lastKnownLatestKey =
+    null;
+
+let nextLiveCheckAt = Date.now() + LIVE_UPDATE_INTERVAL;
+let countdownTimer = null;
+
+
+let frameMetadataCache =
+    new Map();
+
+let currentPopup =
+    null;
+
+
+/* =========================================================
+   ANIMATION SPEED
+   ========================================================= */
+
+const FRAME_INTERVAL =
+    350;
+
+const LATEST_FRAME_PAUSE =
+    1000;
+
+
+/* =========================================================
+   PRODUCT CONFIGURATION
+   ========================================================= */
+
+const PRODUCTS = {
+
+    REF: {
+
+        title:
+            "Base Reflectivity",
+
+        units:
+            "dBZ",
+
+        min:
+            -20,
+
+        mid:
+            40,
+
+        max:
+            80,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#646464," +
+            "#04e9e7," +
+            "#019ff4," +
+            "#0300f4," +
+            "#02fd02," +
+            "#01c501," +
+            "#008e00," +
+            "#fdf802," +
+            "#e5bc00," +
+            "#fd9500," +
+            "#fd0000," +
+            "#d40000," +
+            "#bc0000," +
+            "#f800fd," +
+            "#9854c6)"
+
+    },
+
+
+    VEL: {
+
+        title:
+            "Base Velocity",
+
+        units:
+            "mph",
+
+        min:
+            -100,
+
+        mid:
+            0,
+
+        max:
+            100,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#00ffff," +
+            "#0077ff," +
+            "#00aa66," +
+            "#006600," +
+            "#202020," +
+            "#777777," +
+            "#401010," +
+            "#770000," +
+            "#ff0000," +
+            "#ff66aa," +
+            "#ffff00)"
+
+    },
+
+
+    SW: {
+
+        title:
+            "Spectrum Width",
+
+        units:
+            "mph",
+
+        min:
+            0,
+
+        mid:
+            20,
+
+        max:
+            50,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#101010," +
+            "#0055ff," +
+            "#00ffff," +
+            "#00ff55," +
+            "#ffff00," +
+            "#ff7700," +
+            "#ff0000," +
+            "#ff00ff)"
+
+    },
+
+
+    ZDR: {
+
+        title:
+            "Differential Reflectivity",
+
+        units:
+            "dB",
+
+        min:
+            -4,
+
+        mid:
+            2,
+
+        max:
+            8,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#003cff," +
+            "#00ffff," +
+            "#00aa00," +
+            "#ffff00," +
+            "#ff8800," +
+            "#ff0000," +
+            "#ff00ff)"
+
+    },
+
+
+    CC: {
+
+        title:
+            "Correlation Coefficient",
+
+        units:
+            "",
+
+        min:
+            0.70,
+
+        mid:
+            0.90,
+
+        max:
+            1.00,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#0000ff," +
+            "#00ffff," +
+            "#00ff00," +
+            "#ffff00," +
+            "#ff8800," +
+            "#ff0000," +
+            "#ff00ff)"
+
+    },
+
+
+    KDP: {
+
+        title:
+            "Specific Differential Phase",
+
+        units:
+            "°/km",
+
+        min:
+            -2,
+
+        mid:
+            2,
+
+        max:
+            8,
+
+        gradient:
+            "linear-gradient(to right," +
+            "#663399," +
+            "#004cff," +
+            "#00bfff," +
+            "#00ffff," +
+            "#00cc66," +
+            "#00ff00," +
+            "#ffff00," +
+            "#ff9900," +
+            "#ff0000," +
+            "#ff00ff," +
+            "#ffffff)"
+
+    }
+
+};
+
+
+/* =========================================================
+   MAP
+   ========================================================= */
+
+const map =
+    new mapboxgl.Map({
+
+        container:
+            "map",
+
+        style:
+            "mapbox://styles/mapbox/dark-v11",
+
+        center: [
+            radarLon,
+            radarLat
+        ],
+
+        zoom:
+            6.3
+
+    });
+
+
+map.addControl(
+
+    new mapboxgl.NavigationControl(),
+
+    "top-right"
+
+);
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+function setStatus(
+    text
+) {
+
+    document
+        .getElementById(
+            "status"
+        )
+        .textContent =
+            text;
+
+}
+
+
+/* =========================================================
+   LOADING MESSAGE
+   ========================================================= */
+
+function setLoading(
+    visible,
+    message =
+        "Loading NEXRAD Level-II..."
+) {
+
+    const loading =
+        document.getElementById(
+            "loading"
+        );
+
+    loading.textContent =
+        message;
+
+    loading.style.display =
+        visible
+        ? "block"
+        : "none";
+
+}
+
+
+/* =========================================================
+   LEGEND
+   ========================================================= */
+
+function updateLegend() {
+
+    const config =
+        PRODUCTS[
+            currentProduct
+        ];
+
+    document
+        .getElementById(
+            "legendTitle"
+        )
+        .textContent =
+
+            config.title
+
+            +
+
+            (
+                config.units
+                ? " — " + config.units
+                : ""
+            );
+
+    document
+        .getElementById(
+            "colorbar"
+        )
+        .style.background =
+            config.gradient;
+
+    document
+        .getElementById(
+            "minLabel"
+        )
+        .textContent =
+            config.min;
+
+    document
+        .getElementById(
+            "midLabel"
+        )
+        .textContent =
+            config.mid;
+
+    document
+        .getElementById(
+            "maxLabel"
+        )
+        .textContent =
+            config.max;
+
+}/* =========================================================
+   BACKEND STATUS
+   ========================================================= */
+
+async function checkBackend() {
+
+    const response =
+        await fetch(
+            "/api/status"
+        );
+
+    if (!response.ok) {
+        throw new Error(
+            "Backend did not respond."
+        );
+    }
+
+    const data =
+        await response.json();
+
+    setStatus(
+        `${data.backend || "NEXRAD backend"} online`
+    );
+}
+
+
+/* =========================================================
+   ELEVATIONS
+   ========================================================= */
+
+async function loadElevations() {
+
+    const response =
+        await fetch(
+            `/api/elevations/` +
+            `${currentSite}/` +
+            `${currentProduct}`
+        );
+
+    if (!response.ok) {
+        throw new Error(
+            `Elevation request failed: ${response.status}`
+        );
+    }
+
+    const data =
+        await response.json();
+
+    if (!data.success) {
+        throw new Error(
+            data.error ||
+            "Unable to load elevations."
+        );
+    }
+
+    if (
+        !Array.isArray(data.elevations)
+        ||
+        data.elevations.length === 0
+    ) {
+        throw new Error(
+            `No ${currentProduct} elevations available.`
+        );
+    }
+
+    const select =
+        document.getElementById(
+            "elevation"
+        );
+
+    const oldElevation =
+        Number(
+            currentElevation
+        );
+
+    select.innerHTML =
+        "";
+
+    data.elevations.forEach(
+        elevation => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                elevation;
+
+            option.textContent =
+                Number(
+                    elevation
+                ).toFixed(2)
+                +
+                "°";
+
+            select.appendChild(
+                option
+            );
+        }
+    );
+
+    let closest =
+        data.elevations[0];
+
+    let closestDifference =
+        Math.abs(
+            closest -
+            oldElevation
+        );
+
+    for (
+        const elevation
+        of data.elevations
+    ) {
+
+        const difference =
+            Math.abs(
+                elevation -
+                oldElevation
+            );
+
+        if (
+            difference <
+            closestDifference
+        ) {
+
+            closest =
+                elevation;
+
+            closestDifference =
+                difference;
+        }
+    }
+
+    currentElevation =
+        Number(
+            closest
+        );
+
+    select.value =
+        String(
+            closest
+        );
+}
+
+
+/* =========================================================
+   LOAD FRAME LIST
+   ========================================================= */
+
+async function loadFrameList(count = 1, force = false) {
+    const params = new URLSearchParams({count:String(count)});
+    if (force) params.set("refresh","1");
+    const response = await fetch(`/api/frames/${currentSite}?${params}`, {cache:"no-store"});
+    if (!response.ok) throw new Error(`Frame request failed: ${response.status}`);
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error || "Unable to load radar frames.");
+    animationFrames = data.frames || [];
+    if (!animationFrames.length) throw new Error("No radar volumes available.");
+    currentFrameIndex = animationFrames.length - 1;
+    lastKnownLatestKey = animationFrames[currentFrameIndex].key;
+    const slider=document.getElementById("frameSlider");
+    slider.min=0; slider.max=Math.max(0,animationFrames.length-1); slider.value=currentFrameIndex;
+    slider.disabled=animationFrames.length<=1;
+    updateFrameTime();
+}
+
+async function collectLoopFrames() {
+    setStatus(`Collecting the previous 9 ${currentSite} scans for Loop...`);
+    await loadFrameList(10,false);
+    await preloadFrames();
+}
+
+
+/* =========================================================
+   FRAME TIME
+   ========================================================= */
+
+function updateFrameTime() {
+
+    if (
+        !animationFrames.length
+    ) {
+
+        document
+            .getElementById(
+                "frameTime"
+            )
+            .textContent =
+                "No frames";
+
+        return;
+    }
+
+    const frame =
+        animationFrames[
+            currentFrameIndex
+        ];
+
+    const date =
+        new Date(
+            frame.time
+        );
+
+    document
+        .getElementById(
+            "frameTime"
+        )
+        .textContent =
+            `${currentFrameIndex + 1} / ` +
+            `${animationFrames.length} — ` +
+            date.toLocaleString();
+
+    document
+        .getElementById(
+            "time"
+        )
+        .textContent =
+            `${currentSite} — ` +
+            date.toLocaleString();
+}
+
+
+/* =========================================================
+   UPDATE MAPBOX RADAR IMAGE
+   ========================================================= */
+
+async function updateRadarImage(
+    data
+) {
+
+    radarLat =
+        Number(
+            data.radar_latitude
+        );
+
+    radarLon =
+        Number(
+            data.radar_longitude
+        );
+
+    if (
+        map.getLayer(
+            "radar-raster"
+        )
+    ) {
+        map.removeLayer(
+            "radar-raster"
+        );
+    }
+
+    if (
+        map.getSource(
+            "radar-image"
+        )
+    ) {
+        map.removeSource(
+            "radar-image"
+        );
+    }
+
+    map.addSource(
+        "radar-image",
+        {
+            type:
+                "image",
+
+            url:
+                data.image_url,
+
+            coordinates:
+                data.coordinates
+        }
+    );
+
+    map.addLayer(
+        {
+            id:
+                "radar-raster",
+
+            type:
+                "raster",
+
+            source:
+                "radar-image",
+
+            paint: {
+
+                "raster-opacity":
+                    Number(
+                        document
+                            .getElementById(
+                                "opacity"
+                            )
+                            .value
+                    ),
+
+                "raster-resampling":
+                    "nearest",
+
+                "raster-fade-duration":
+                    0
+            }
+        }
+    );
+
+    updateRadarSite();
+    updateRangeRings();
+}
+
+
+/* =========================================================
+   LOAD ANIMATION FRAME
+   ========================================================= */
+
+async function showAnimationFrame(
+    frameIndex,
+    showLoadingOverlay = false
+) {
+
+    if (
+        frameIndex < 0
+        ||
+        frameIndex >=
+            animationFrames.length
+    ) {
+        return;
+    }
+
+    currentFrameIndex =
+        frameIndex;
+
+    const frame =
+        animationFrames[
+            frameIndex
+        ];
+
+    document
+        .getElementById(
+            "frameSlider"
+        )
+        .value =
+            frameIndex;
+
+    updateFrameTime();
+
+    const cacheId =
+        frame.key
+        +
+        "|"
+        +
+        currentProduct
+        +
+        "|"
+        +
+        currentElevation;
+
+    let data;
+
+    try {
+
+        if (
+            showLoadingOverlay
+        ) {
+            setLoading(
+                true,
+                `Rendering ${currentSite} ` +
+                `${currentProduct}...`
+            );
+        }
+
+        if (
+            frameMetadataCache.has(
+                cacheId
+            )
+        ) {
+            data =
+                frameMetadataCache.get(
+                    cacheId
+                );
+        }
+
+        else {
+
+            const url =
+                `/api/frame-raster/` +
+                `${currentSite}/` +
+                `${currentProduct}/` +
+                `${currentElevation}` +
+                `?key=` +
+                encodeURIComponent(
+                    frame.key
+                )
+                +
+                `&max_range_km=230`;
+
+            const response =
+                await fetch(
+                    url
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Radar frame request failed: ` +
+                    `${response.status}`
+                );
+            }
+
+            data =
+                await response.json();
+
+            if (!data.success) {
+                throw new Error(
+                    data.error ||
+                    "Radar frame failed."
+                );
+            }
+
+            frameMetadataCache.set(
+                cacheId,
+                data
+            );
+        }
+
+        await updateRadarImage(
+            data
+        );
+
+        const actualElevation =
+            Number(
+                data.actual_elevation
+            );
+
+        setStatus(
+            `${PRODUCTS[currentProduct].title} — ` +
+            `${actualElevation.toFixed(2)}° — ` +
+            `Frame ${frameIndex + 1} of ` +
+            `${animationFrames.length}`
+        );
+
+        updateLegend();
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+        setStatus(
+            "Radar error: "
+            +
+            error.message
+        );
+
+        throw error;
+    }
+
+    finally {
+
+        if (
+            showLoadingOverlay
+        ) {
+            setLoading(
+                false
+            );
+        }
+    }
+}
+
+
+/* =========================================================
+   PRELOAD FRAMES
+   ========================================================= */
+
+async function preloadFrames() {
+
+    if (
+        !animationFrames.length
+    ) {
+        return;
+    }
+
+    setStatus(
+        `Preparing ${animationFrames.length} ` +
+        `${currentProduct} frames...`
+    );
+
+    for (
+        let i = 0;
+        i < animationFrames.length;
+        i++
+    ) {
+
+        const frame =
+            animationFrames[i];
+
+        const cacheId =
+            frame.key
+            +
+            "|"
+            +
+            currentProduct
+            +
+            "|"
+            +
+            currentElevation;
+
+        if (
+            frameMetadataCache.has(
+                cacheId
+            )
+        ) {
+            continue;
+        }
+
+        try {
+
+            const url =
+                `/api/frame-raster/` +
+                `${currentSite}/` +
+                `${currentProduct}/` +
+                `${currentElevation}` +
+                `?key=` +
+                encodeURIComponent(
+                    frame.key
+                )
+                +
+                `&max_range_km=230`;
+
+            const response =
+                await fetch(
+                    url
+                );
+
+            if (!response.ok) {
+                continue;
+            }
+
+            const data =
+                await response.json();
+
+            if (
+                data.success
+            ) {
+
+                frameMetadataCache.set(
+                    cacheId,
+                    data
+                );
+
+                const image =
+                    new Image();
+
+                image.src =
+                    data.image_url;
+            }
+        }
+
+        catch (error) {
+
+            console.warn(
+                "Unable to preload frame",
+                i,
+                error
+            );
+        }
+    }
+
+    setStatus(
+        `${PRODUCTS[currentProduct].title} frames ready.`
+    );
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+function stopAnimation() {
+
+    animationRunning =
+        false;
+
+    animationBusy =
+        false;
+
+    if (
+        animationTimer
+    ) {
+
+        clearTimeout(
+            animationTimer
+        );
+
+        animationTimer =
+            null;
+    }
+
+    const button =
+        document.getElementById(
+            "loopButton"
+        );
+
+    button.textContent =
+        "▶ Loop";
+
+    button.classList.remove(
+        "active"
+    );
+}
+
+
+function scheduleNextFrame(
+    delay
+) {
+
+    if (
+        !animationRunning
+    ) {
+        return;
+    }
+
+    if (
+        animationTimer
+    ) {
+        clearTimeout(
+            animationTimer
+        );
+    }
+
+    animationTimer =
+        setTimeout(
+            advanceAnimation,
+            delay
+        );
+}
+
+
+async function advanceAnimation() {
+
+    if (
+        !animationRunning
+        ||
+        animationBusy
+    ) {
+        return;
+    }
+
+    animationBusy =
+        true;
+
+    try {
+
+        currentFrameIndex++;
+
+        if (
+            currentFrameIndex >=
+            animationFrames.length
+        ) {
+            currentFrameIndex =
+                0;
+        }
+
+        await showAnimationFrame(
+            currentFrameIndex,
+            false
+        );
+
+        const newest =
+            currentFrameIndex ===
+            animationFrames.length - 1;
+
+        scheduleNextFrame(
+            newest
+            ?
+            LATEST_FRAME_PAUSE
+            :
+            FRAME_INTERVAL
+        );
+    }
+
+    catch (error) {
+
+        console.error(
+            error
+        );
+
+        scheduleNextFrame(
+            1000
+        );
+    }
+
+    finally {
+
+        animationBusy =
+            false;
+    }
+}
+
+
+/* =========================================================
+   LOOP BUTTON — OLDER NINE ARE COLLECTED ONLY HERE
+   ========================================================= */
+document.getElementById("loopButton").addEventListener("click", async () => {
+    if (animationRunning) { stopAnimation(); return; }
+    const button=document.getElementById("loopButton");
+    button.disabled=true; button.textContent="Loading 10...";
+    try {
+        if (animationFrames.length < 10) await collectLoopFrames(); else await preloadFrames();
+        animationRunning=true; button.textContent="■ Stop"; button.classList.add("active");
+        currentFrameIndex=animationFrames.length-1; scheduleNextFrame(100);
+    } catch(error) { console.error(error); setStatus("Loop preparation error: "+error.message); stopAnimation(); }
+    finally { button.disabled=false; }
+});
+
+
+/* =========================================================
+   LATEST BUTTON
+   ========================================================= */
+
+document
+    .getElementById(
+        "latestButton"
+    )
+    .addEventListener(
+        "click",
+        async () => {
+
+            stopAnimation();
+
+            if (
+                !animationFrames.length
+            ) {
+                return;
+            }
+
+            currentFrameIndex =
+                animationFrames.length - 1;
+
+            await showAnimationFrame(
+                currentFrameIndex,
+                true
+            );
+        }
+    );
+
+
+/* =========================================================
+   FRAME SLIDER
+   ========================================================= */
+
+document
+    .getElementById(
+        "frameSlider"
+    )
+    .addEventListener(
+        "input",
+        async event => {
+
+            stopAnimation();
+
+            const index =
+                Number(
+                    event.target.value
+                );
+
+            await showAnimationFrame(
+                index,
+                true
+            );
+        }
+    );
+
+
+/* =========================================================
+   PRODUCT BUTTONS
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        ".product"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                async () => {
+
+                    stopAnimation();
+
+                    document
+                        .querySelectorAll(
+                            ".product"
+                        )
+                        .forEach(
+                            item =>
+                                item.classList.remove(
+                                    "active"
+                                )
+                        );
+
+                    button.classList.add(
+                        "active"
+                    );
+
+                    currentProduct =
+                        button.dataset.product;
+
+                    updateLegend();
+
+                    setLoading(
+                        true,
+                        `Loading ${currentProduct}...`
+                    );
+
+                    try {
+
+                        await loadElevations();
+
+                        frameMetadataCache.clear();
+
+                        await loadFrameList();
+
+                        await showAnimationFrame(
+                            animationFrames.length - 1,
+                            false
+                        );
+                    }
+
+                    catch (error) {
+
+                        console.error(
+                            error
+                        );
+
+                        setStatus(
+                            "Product error: "
+                            +
+                            error.message
+                        );
+                    }
+
+                    finally {
+
+                        setLoading(
+                            false
+                        );
+                    }
+                }
+            );
+        }
+    );
+
+
+/* =========================================================
+   ELEVATION CHANGE
+   ========================================================= */
+
+document
+    .getElementById(
+        "elevation"
+    )
+    .addEventListener(
+        "change",
+        async event => {
+
+            stopAnimation();
+
+            currentElevation =
+                Number(
+                    event.target.value
+                );
+
+            frameMetadataCache.clear();
+
+            try {
+
+                await showAnimationFrame(
+                    animationFrames.length - 1,
+                    true
+                );
+            }
+
+            catch (error) {
+
+                console.error(
+                    error
+                );
+            }
+        }
+    );
+
+
+/* =========================================================
+   OPACITY
+   ========================================================= */
+
+document
+    .getElementById(
+        "opacity"
+    )
+    .addEventListener(
+        "input",
+        event => {
+
+            if (
+                map.getLayer(
+                    "radar-raster"
+                )
+            ) {
+
+                map.setPaintProperty(
+                    "radar-raster",
+                    "raster-opacity",
+                    Number(
+                        event.target.value
+                    )
+                );
+            }
+        }
+    );/* =========================================================
+   RADAR SITE MARKER
+   ========================================================= */
+
+function updateRadarSite() {
+
+    const siteGeoJSON = {
+
+        type:
+            "FeatureCollection",
+
+        features: [
+            {
+                type:
+                    "Feature",
+
+                geometry: {
+                    type:
+                        "Point",
+
+                    coordinates: [
+                        radarLon,
+                        radarLat
+                    ]
+                },
+
+                properties: {
+                    site:
+                        currentSite
+                }
+            }
+        ]
+    };
+
+    if (
+        map.getSource(
+            "radar-site"
+        )
+    ) {
+
+        map
+            .getSource(
+                "radar-site"
+            )
+            .setData(
+                siteGeoJSON
+            );
+
+        return;
+    }
+
+    map.addSource(
+        "radar-site",
+        {
+            type:
+                "geojson",
+
+            data:
+                siteGeoJSON
+        }
+    );
+
+    map.addLayer(
+        {
+            id:
+                "radar-site-dot",
+
+            type:
+                "circle",
+
+            source:
+                "radar-site",
+
+            paint: {
+                "circle-radius":
+                    5,
+
+                "circle-color":
+                    "#ffffff",
+
+                "circle-stroke-color":
+                    "#000000",
+
+                "circle-stroke-width":
+                    2
+            }
+        }
+    );
+
+    map.addLayer(
+        {
+            id:
+                "radar-site-label",
+
+            type:
+                "symbol",
+
+            source:
+                "radar-site",
+
+            layout: {
+
+                "text-field":
+                    ["get", "site"],
+
+                "text-size":
+                    12,
+
+                "text-offset": [
+                    0,
+                    1.3
+                ],
+
+                "text-anchor":
+                    "top"
+            },
+
+            paint: {
+
+                "text-color":
+                    "#ffffff",
+
+                "text-halo-color":
+                    "#000000",
+
+                "text-halo-width":
+                    1.5
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   GEODESIC CIRCLE
+   ========================================================= */
+
+function createCircle(
+    centerLon,
+    centerLat,
+    radiusMiles,
+    points = 180
+) {
+
+    const radiusKm =
+        radiusMiles *
+        1.609344;
+
+    const earthRadiusKm =
+        6371.0088;
+
+    const angularDistance =
+        radiusKm /
+        earthRadiusKm;
+
+    const lat1 =
+        centerLat *
+        Math.PI /
+        180;
+
+    const lon1 =
+        centerLon *
+        Math.PI /
+        180;
+
+    const coordinates =
+        [];
+
+    for (
+        let i = 0;
+        i <= points;
+        i++
+    ) {
+
+        const bearing =
+            (
+                i /
+                points
+            )
+            *
+            2
+            *
+            Math.PI;
+
+        const lat2 =
+            Math.asin(
+                Math.sin(
+                    lat1
+                )
+                *
+                Math.cos(
+                    angularDistance
+                )
+                +
+                Math.cos(
+                    lat1
+                )
+                *
+                Math.sin(
+                    angularDistance
+                )
+                *
+                Math.cos(
+                    bearing
+                )
+            );
+
+        const lon2 =
+            lon1
+            +
+            Math.atan2(
+                Math.sin(
+                    bearing
+                )
+                *
+                Math.sin(
+                    angularDistance
+                )
+                *
+                Math.cos(
+                    lat1
+                ),
+
+                Math.cos(
+                    angularDistance
+                )
+                -
+                Math.sin(
+                    lat1
+                )
+                *
+                Math.sin(
+                    lat2
+                )
+            );
+
+        coordinates.push(
+            [
+                lon2 *
+                180 /
+                Math.PI,
+
+                lat2 *
+                180 /
+                Math.PI
+            ]
+        );
+    }
+
+    return coordinates;
+}
+
+
+/* =========================================================
+   RANGE RINGS
+   ========================================================= */
+
+function updateRangeRings() {
+
+    const enabled =
+        document
+            .getElementById(
+                "rangeRings"
+            )
+            .checked;
+
+    const distances = [
+        25,
+        50,
+        75,
+        100,
+        125
+    ];
+
+    const features =
+        [];
+
+    if (
+        enabled
+    ) {
+
+        distances.forEach(
+            miles => {
+
+                features.push(
+                    {
+                        type:
+                            "Feature",
+
+                        properties: {
+                            miles:
+                                miles
+                        },
+
+                        geometry: {
+                            type:
+                                "LineString",
+
+                            coordinates:
+                                createCircle(
+                                    radarLon,
+                                    radarLat,
+                                    miles
+                                )
+                        }
+                    }
+                );
+            }
+        );
+    }
+
+    const geojson = {
+
+        type:
+            "FeatureCollection",
+
+        features:
+            features
+    };
+
+    if (
+        map.getSource(
+            "range-rings"
+        )
+    ) {
+
+        map
+            .getSource(
+                "range-rings"
+            )
+            .setData(
+                geojson
+            );
+
+        return;
+    }
+
+    map.addSource(
+        "range-rings",
+        {
+            type:
+                "geojson",
+
+            data:
+                geojson
+        }
+    );
+
+    map.addLayer(
+        {
+            id:
+                "range-rings",
+
+            type:
+                "line",
+
+            source:
+                "range-rings",
+
+            paint: {
+
+                "line-color":
+                    "#ffffff",
+
+                "line-width":
+                    1,
+
+                "line-opacity":
+                    0.45,
+
+                "line-dasharray": [
+                    4,
+                    4
+                ]
+            }
+        },
+
+        map.getLayer(
+            "radar-site-dot"
+        )
+        ?
+        "radar-site-dot"
+        :
+        undefined
+    );
+}
+
+
+/* =========================================================
+   RANGE RING TOGGLE
+   ========================================================= */
+
+document
+    .getElementById(
+        "rangeRings"
+    )
+    .addEventListener(
+        "change",
+        () => {
+            updateRangeRings();
+        }
+    );
+
+
+/* =========================================================
+   EXACT DATA INTERROGATION
+   ========================================================= */
+
+map.on(
+    "click",
+    async event => {
+
+        if (
+            !document
+                .getElementById(
+                    "interrogate"
+                )
+                .checked
+        ) {
+            return;
+        }
+
+        if (
+            !animationFrames.length
+        ) {
+            return;
+        }
+
+        const lat =
+            event.lngLat.lat;
+
+        const lon =
+            event.lngLat.lng;
+
+        const frame =
+            animationFrames[
+                currentFrameIndex
+            ];
+
+        try {
+
+            let url =
+                `/api/query/` +
+                `${currentSite}/` +
+                `${currentProduct}/` +
+                `${currentElevation}` +
+                `?lat=${lat}` +
+                `&lon=${lon}`;
+
+            if (
+                frame &&
+                frame.key
+            ) {
+
+                url +=
+                    `&key=`
+                    +
+                    encodeURIComponent(
+                        frame.key
+                    );
+            }
+
+            const response =
+                await fetch(
+                    url
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Query failed: ${response.status}`
+                );
+            }
+
+            const data =
+                await response.json();
+
+            if (
+                !data.success
+            ) {
+                throw new Error(
+                    data.error ||
+                    "No radar data."
+                );
+            }
+
+            let valueText =
+                "No Data";
+
+            if (
+                data.value !== null
+                &&
+                data.value !== undefined
+            ) {
+
+                valueText =
+                    Number(
+                        data.value
+                    ).toFixed(1)
+                    +
+                    (
+                        data.units
+                        ?
+                        " " + data.units
+                        :
+                        ""
+                    );
+            }
+
+            let frameText =
+                "";
+
+            if (
+                frame &&
+                frame.time
+            ) {
+
+                frameText =
+                    "<br>Scan: "
+                    +
+                    new Date(
+                        frame.time
+                    ).toLocaleString();
+            }
+
+            const html = `
+
+                <strong>
+                    ${data.site}
+                    ${data.product_name}
+                </strong>
+
+                <br>
+
+                Value:
+                <b>
+                    ${valueText}
+                </b>
+
+                <br>
+
+                Elevation:
+                ${Number(
+                    data.elevation
+                ).toFixed(2)}°
+
+                <br>
+
+                Range:
+                ${Number(
+                    data.range_mi
+                ).toFixed(1)} mi
+
+                <br>
+
+                Azimuth:
+                ${Number(
+                    data.azimuth
+                ).toFixed(1)}°
+
+                ${frameText}
+
+            `;
+
+            if (
+                currentPopup
+            ) {
+                currentPopup.remove();
+            }
+
+            currentPopup =
+                new mapboxgl.Popup({
+                    closeButton:
+                        true,
+
+                    closeOnClick:
+                        true
+                })
+                .setLngLat(
+                    event.lngLat
+                )
+                .setHTML(
+                    html
+                )
+                .addTo(
+                    map
+                );
+        }
+
+        catch (error) {
+
+            console.error(
+                error
+            );
+        }
+    }
+);/* =========================================================
+   SEARCHABLE CONUS RADAR SELECTOR
+   ========================================================= */
+const originalRadarOptions=Array.from(document.querySelectorAll("#site option")).map(o=>({value:o.value,text:o.textContent.trim(),search:(o.dataset.search||o.textContent).toLowerCase(),state:o.parentElement?.tagName==="OPTGROUP"?o.parentElement.label:"Other"}));
+function rebuildRadarSelector(filterText=""){ const select=document.getElementById("site"),q=filterText.trim().toLowerCase(),groups=new Map(); for(const item of originalRadarOptions){if(q&&!item.search.includes(q))continue;if(!groups.has(item.state))groups.set(item.state,[]);groups.get(item.state).push(item);} select.innerHTML=""; for(const [state,items] of groups){const group=document.createElement("optgroup");group.label=state;for(const item of items){const o=document.createElement("option");o.value=item.value;o.textContent=item.text;o.dataset.search=item.search;if(item.value===currentSite)o.selected=true;group.appendChild(o);}select.appendChild(group);} }
+document.getElementById("siteSearch").addEventListener("input",e=>rebuildRadarSelector(e.target.value));
+
+/* =========================================================
+   RADAR SITE CHANGE
+   ========================================================= */
+
+document
+    .getElementById(
+        "site"
+    )
+    .addEventListener(
+        "change",
+        async event => {
+
+            stopAnimation();
+
+            currentSite =
+                event.target.value;
+
+            resetLiveCountdown();
+            updateLiveCountdown();
+
+            frameMetadataCache.clear();
+
+            setLoading(
+                true,
+                `Loading ${currentSite}...`
+            );
+
+            try {
+
+                await loadElevations();
+
+                await loadFrameList();
+
+                await showAnimationFrame(
+                    animationFrames.length - 1,
+                    false
+                );
+
+                map.easeTo({
+                    center: [
+                        radarLon,
+                        radarLat
+                    ],
+
+                    zoom:
+                        6.3,
+
+                    duration:
+                        700
+                });
+            }
+
+            catch (error) {
+
+                console.error(
+                    error
+                );
+
+                setStatus(
+                    "Radar site error: "
+                    +
+                    error.message
+                );
+            }
+
+            finally {
+
+                setLoading(
+                    false
+                );
+            }
+        }
+    );
+
+
+/* =========================================================
+   60-SECOND LIVE AUTO UPDATE
+
+   Every 60 seconds this asks app.py to FORCE a fresh check
+   of the AWS NEXRAD Level-II archive.
+
+   If a new scan exists:
+     - refresh the 10-frame list
+     - automatically display it when viewing Latest
+     - preserve an old frame if the user is reviewing history
+     - allow the animation loop to continue
+   ========================================================= */
+
+function isViewingLatestFrame() {
+
+    return (
+        animationFrames.length > 0
+        &&
+        currentFrameIndex ===
+            animationFrames.length - 1
+    );
+}
+
+
+async function checkForNewRadarData() {
+
+    if (
+        liveUpdateBusy
+    ) {
+        return;
+    }
+
+    liveUpdateBusy =
+        true;
+
+    const wasViewingLatest =
+        isViewingLatestFrame();
+
+    const wasAnimating =
+        animationRunning;
+
+    const oldCurrentKey =
+        animationFrames.length
+        &&
+        animationFrames[
+            currentFrameIndex
+        ]
+        ?
+        animationFrames[
+            currentFrameIndex
+        ].key
+        :
+        null;
+
+    try {
+
+        console.log(
+            `Checking AWS for new ${currentSite} radar data...`
+        );
+
+        const response =
+            await fetch(
+                `/api/frames/${currentSite}?refresh=1&count=${animationRunning ? 10 : 1}`,
+                {
+                    cache:
+                        "no-store"
+                }
+            );
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                `Live frame request failed: ` +
+                `${response.status}`
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (
+            !data.success
+            ||
+            !Array.isArray(
+                data.frames
+            )
+            ||
+            data.frames.length === 0
+        ) {
+
+            throw new Error(
+                data.error
+                ||
+                "No radar frames returned during live update."
+            );
+        }
+
+        const refreshedFrames =
+            data.frames;
+
+        const newestFrame =
+            refreshedFrames[
+                refreshedFrames.length - 1
+            ];
+
+        const previousLatestKey =
+            lastKnownLatestKey
+            ||
+            (
+                animationFrames.length
+                ?
+                animationFrames[
+                    animationFrames.length - 1
+                ].key
+                :
+                null
+            );
+
+        const newScanAvailable =
+            previousLatestKey
+            &&
+            newestFrame.key !==
+                previousLatestKey;
+
+        animationFrames =
+            refreshedFrames;
+
+        lastKnownLatestKey =
+            newestFrame.key;
+
+        const slider =
+            document.getElementById(
+                "frameSlider"
+            );
+
+        slider.min =
+            0;
+
+        slider.max =
+            Math.max(
+                0,
+                animationFrames.length - 1
+            );
+
+        /*
+         * NEW RADAR VOLUME FOUND
+         */
+
+        if (
+            newScanAvailable
+        ) {
+
+            console.log(
+                "New NEXRAD Level-II scan detected:",
+                newestFrame.filename
+                ||
+                newestFrame.key
+            );
+
+            /*
+             * If the viewer was already watching Latest,
+             * automatically move to the new scan.
+             */
+
+            if (
+                wasViewingLatest
+                &&
+                !wasAnimating
+            ) {
+
+                currentFrameIndex =
+                    animationFrames.length - 1;
+
+                slider.value =
+                    currentFrameIndex;
+
+                setStatus(
+                    `New ${currentSite} scan found — ` +
+                    `loading ` +
+                    `${PRODUCTS[currentProduct].title}...`
+                );
+
+                await showAnimationFrame(
+                    currentFrameIndex,
+                    false
+                );
+            }
+
+            else {
+
+                /*
+                 * User is looking at an older frame.
+                 * Try to preserve that exact archive key.
+                 */
+
+                let preservedIndex =
+                    oldCurrentKey
+                    ?
+                    animationFrames.findIndex(
+                        frame =>
+                            frame.key ===
+                            oldCurrentKey
+                    )
+                    :
+                    -1;
+
+                if (
+                    preservedIndex < 0
+                ) {
+
+                    preservedIndex =
+                        Math.min(
+                            currentFrameIndex,
+                            animationFrames.length - 1
+                        );
+                }
+
+                currentFrameIndex =
+                    preservedIndex;
+
+                slider.value =
+                    currentFrameIndex;
+
+                updateFrameTime();
+
+                if (
+                    wasAnimating
+                ) {
+
+                    setStatus(
+                        `New ${currentSite} scan ` +
+                        `added to animation.`
+                    );
+                }
+
+                else {
+
+                    setStatus(
+                        `New ${currentSite} scan available — ` +
+                        `press Latest to view it.`
+                    );
+                }
+            }
+        }
+
+        /*
+         * NO NEW SCAN
+         */
+
+        else {
+
+            if (
+                wasViewingLatest
+            ) {
+
+                currentFrameIndex =
+                    animationFrames.length - 1;
+
+                slider.value =
+                    currentFrameIndex;
+
+                updateFrameTime();
+            }
+
+            console.log(
+                `Live radar check complete — ` +
+                `no new ${currentSite} scan.`
+            );
+        }
+    }
+
+    catch (error) {
+
+        console.error(
+            "Live radar update error:",
+            error
+        );
+
+        /*
+         * Do NOT remove the existing radar if an update
+         * check fails. It will simply retry in 60 seconds.
+         */
+    }
+
+    finally {
+
+        liveUpdateBusy =
+            false;
+
+        resetLiveCountdown();
+        updateLiveCountdown();
+    }
+}
+
+
+function resetLiveCountdown(){ nextLiveCheckAt=Date.now()+LIVE_UPDATE_INTERVAL; }
+function updateLiveCountdown(){ const e=document.getElementById("nextUpdate"); if(!e)return; const r=Math.max(0,Math.ceil((nextLiveCheckAt-Date.now())/1000)); e.textContent=`Next ${currentSite} radar check in ${r}s`; }
+function startCountdownClock(){ if(countdownTimer)clearInterval(countdownTimer); resetLiveCountdown(); updateLiveCountdown(); countdownTimer=setInterval(updateLiveCountdown,250); }
+
+/* =========================================================
+   START LIVE UPDATE TIMER
+   ========================================================= */
+
+function startLiveUpdates() {
+
+    /*
+     * Prevent duplicate timers.
+     */
+
+    if (
+        liveUpdateTimer
+    ) {
+
+        clearInterval(
+            liveUpdateTimer
+        );
+    }
+
+    /*
+     * Remember the scan currently considered Latest.
+     */
+
+    if (
+        animationFrames.length
+    ) {
+
+        lastKnownLatestKey =
+            animationFrames[
+                animationFrames.length - 1
+            ].key;
+    }
+
+    /*
+     * Check once every 60,000 milliseconds = 60 seconds.
+     */
+
+    liveUpdateTimer =
+        setInterval(
+            checkForNewRadarData,
+            LIVE_UPDATE_INTERVAL
+        );
+
+    startCountdownClock();
+
+    console.log(
+        "NEXRAD live auto-update enabled: 60 seconds"
+    );
+}/* =========================================================
+   INITIALIZE
+   ========================================================= */
+
+map.on(
+    "load",
+    async () => {
+
+        setLoading(
+            true,
+            "Connecting to NEXRAD backend..."
+        );
+
+        try {
+
+            await checkBackend();
+
+            updateLegend();
+
+            setLoading(
+                true,
+                `Finding latest ${currentSite} volume...`
+            );
+
+            await loadElevations();
+
+            await loadFrameList();
+
+            setLoading(
+                true,
+                `Rendering latest ${currentSite} ` +
+                `${currentProduct}...`
+            );
+
+            await showAnimationFrame(
+                animationFrames.length - 1,
+                false
+            );
+
+
+            /*
+             * =====================================================
+             * START THE 60-SECOND AUTOMATIC RADAR UPDATE
+             * =====================================================
+             */
+
+            startLiveUpdates();
+
+
+            map.easeTo({
+
+                center: [
+                    radarLon,
+                    radarLat
+                ],
+
+                zoom:
+                    6.3,
+
+                duration:
+                    700
+            });
+
+
+            /* Older nine frames load only when Loop is pressed. */
+        }
+
+        catch (error) {
+
+            console.error(
+                error
+            );
+
+            setStatus(
+                "Startup error: "
+                +
+                error.message
+            );
+        }
+
+        finally {
+
+            setLoading(
+                false
+            );
+        }
+    }
+);
+
+
+</script>
+
+</body>
+
+</html>
